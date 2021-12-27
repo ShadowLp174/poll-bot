@@ -1,0 +1,18 @@
+{
+  "name": "poll-bot",
+  "version": "1.0.0",
+  "description": "A Discord poll bot using the Canvas API",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "ShadowLp174",
+  "license": "ISC",
+  "dependencies": {
+    "@discordjs/builders": "^0.10.0",
+    "@discordjs/rest": "^0.2.0-canary.0",
+    "canvas": "^2.8.0",
+    "discord-api-types": "^0.26.0",
+    "discord.js": "^13.4.0"
+  }
+}
