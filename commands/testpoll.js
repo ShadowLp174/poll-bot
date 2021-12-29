@@ -2,6 +2,8 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const Canvas = require('canvas');
 const { MessageAttachment, MessageActionRow, MessageButton } = require("discord.js");
 const Poll = require("../Poll.js");
+const dayjs = require('dayjs');
+dayjs().format();
 
 function textHeight(text, ctx, m) {
 	let metrics = m || ctx.measureText(text);
@@ -81,24 +83,57 @@ function drawVoteBars(ctx, width, height, votes, vars, names) {
 	ctx.restore();
 }
 
-function drawFooter(ctx, x, y, width, height, padding) {
+async function drawFooter(ctx, x, y, width, height, padding, users, voteCount, date) {
 	ctx.save();
 	ctx.translate(x, y);
 
-	console.log(y);
+	var rad = 15;
 
 	ctx.fillStyle = "#2C2F33";
 	ctx.lineWidth = 2;
 	ctx.strokeStyle = "#2C2F33";
 	ctx.beginPath();
-	ctx.moveTo(x - padding, y);
-	ctx.lineTo(width, y);
+	ctx.moveTo(0 - padding, 0);
+	ctx.lineTo(width, 0);
 	ctx.stroke();
 
+	let votes = `${voteCount} votes`;
+	let metrics = ctx.measureText(votes);
+	let h = textHeight(votes, ctx, metrics);
+
+	ctx.fillText(votes, 5, rad + h);
+
+	// Avatars
+	var pos = rad * 3 + metrics.width;
+	var yPos = 10;
+	users.reverse();
+	for (let i = 0; i < users.length; i++) {
+		ctx.beginPath();
+		let user = users[i]; // user == interaction.user.displayAvatarURL({ format: 'jpg' })
+
+		const a = Canvas.createCanvas(rad * 2, rad * 2);
+		const context = a.getContext("2d");
+
+		context.beginPath();
+		context.arc(rad, rad, rad, 0, Math.PI * 2, true);
+		context.closePath();
+		context.clip();
+
+		const avatar = await Canvas.loadImage(user);
+		context.drawImage(avatar, 0, 0, rad * 2, rad * 2);
+
+		ctx.drawImage(a, pos, yPos);
+
+		ctx.closePath();
+		pos -= rad;
+	}
+
+	// Date
+	console.log(dayjs(date).format("DD.MM.YYYY HH:mm"));
 	ctx.restore();
 }
 
-function testpoll(interaction) {
+async function testpoll(interaction) {
 	var width = 500, height = 250, padding = 10;
 	const canvas = Canvas.createCanvas(width, height);
 	const ctx = canvas.getContext('2d');
@@ -130,7 +165,7 @@ function testpoll(interaction) {
 
 	drawVoteBars(ctx, dataWidth - 20, barHeight, votes, {pad: padding, hHeight: headerHeight}, names);
 
-	drawFooter(ctx, dataWidth - 20, padding + headerHeight + barHeight * 2 + 30, width, height, padding);
+	await drawFooter(ctx, padding, padding + headerHeight + barHeight * 2 + 20, width, height, padding, [interaction.user.displayAvatarURL({ format: 'jpg' }), interaction.user.displayAvatarURL({ format: 'jpg' }), interaction.user.displayAvatarURL({ format: 'jpg' })], votes.reduce((prev, curr) => prev+curr), new Date());
 
 	const attachment = new MessageAttachment(canvas.toBuffer(), 'testpoll.png');
 	const row = new MessageActionRow()

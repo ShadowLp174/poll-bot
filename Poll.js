@@ -1,4 +1,6 @@
 const Canvas = require('canvas');
+const dayjs = require('dayjs');
+dayjs().format();
 
 /*
 @param options {Object}; format: {name: ["aName", "anotherName"]}
@@ -9,12 +11,14 @@ class Poll {
 	constructor(name, options) {
 		this.voteOptions = options;
 		this.votes = [0, 0];
+		this.avatars = [];
+
+		this.date = new Date();
 
 		this.options = {
 			name: name.name,
 			description: name.description
 		}
-    this.update();
     return this;
 	}
 
@@ -57,11 +61,11 @@ class Poll {
     }
   }
 
-  update() {
+  async update() {
     let roundRect = this.roundRect;
     let textHeight = this.textHeight;
 
-		var width = 500, height = 250, padding = 10;
+		var width = 500, height = 200, padding = 10;
     const canvas = Canvas.createCanvas(width, height);
 		this.canvas = canvas;
 		const ctx = this.canvas.getContext('2d');
@@ -77,13 +81,14 @@ class Poll {
 		roundRect(ctx, 0, 0, width, height, 5, true, false); // background
 
 		ctx.fillStyle = "#4E535A";
-		ctx.fillText(name, padding, padding + nameHeight / 2); // name
+		ctx.font = "normal 12px sans-serif";
+		ctx.fillText(name, padding, padding + 2 + nameHeight / 2); // name
 
 		ctx.fillStyle = "#FFFFFF";
 		ctx.font = "normal 17px sans-serif";
-		ctx.fillText(description, padding, padding + 13 + nameHeight + descHeight / 2); // description
+		ctx.fillText(description, padding, padding + 15 + nameHeight + descHeight / 2); // description
 
-		var headerHeight = padding + descHeight + nameHeight + 13;
+		var headerHeight = padding + descHeight + nameHeight + 15;
 		var dataWidth = width - padding * 2;
 		var dataHeight = height - headerHeight - 30;
 
@@ -93,11 +98,14 @@ class Poll {
 		var names = this.voteOptions.name;
 
 		this.drawVoteBars(ctx, dataWidth - 20, barHeight, votes, {pad: padding, hHeight: headerHeight}, names);
+		await this.drawFooter(ctx, padding, padding + headerHeight + barHeight * 2 + 20, width, height, padding, this.avatars);
   }
 
-  addVote(option) {
+  async addVote(option, user) {
+		if (this.avatars.length == 3) this.avatars.shift();
+		this.avatars.push(user);
 		this.votes[option]++;
-    this.update();
+    await this.update();
 		return this.canvas;
 	}
 
@@ -113,6 +121,7 @@ class Poll {
 
 		var barPadding = 5;
 		percentages.forEach((percentage, i) => { // I don't know I meant to do with this calculations but it somehow works so don't touch it
+			if (!percentage) percentage = 0;
 			ctx.fillStyle = "#2C2F33";
 			let y = (height + 10 ) * i;
 			roundRect(ctx, 20, y, width, height, 5, true, false); // full bar
@@ -139,6 +148,59 @@ class Poll {
 			ctx.fillText(percentage + "% (" + votes[i] + ")", width - barPadding - w, y);
 		});
 
+		ctx.restore();
+	}
+
+	async drawFooter(ctx, x, y, width, height, padding, users) {
+		ctx.save();
+		ctx.translate(x, y);
+
+		var rad = 15;
+
+		ctx.fillStyle = "#4E535A";
+		ctx.lineWidth = 2;
+		ctx.strokeStyle = "#4E535A";
+		ctx.beginPath();
+		ctx.moveTo(0 - padding, 0);
+		ctx.lineTo(width, 0);
+		ctx.stroke();
+
+		let votes = `${this.votes.reduce((p, c) => p+c)} votes`;
+		let metrics = ctx.measureText(votes);
+		let h = this.textHeight(votes, ctx, metrics);
+
+		ctx.fillText(votes, 5, rad + h);
+
+		// Avatars
+		var pos = rad * users.length + 10 + metrics.width;
+		var yPos = 10;
+		users.reverse();
+		for (let i = 0; i < users.length; i++) {
+			ctx.beginPath();
+			let user = users[i]; // user == interaction.user.displayAvatarURL({ format: 'jpg' })
+
+			const a = Canvas.createCanvas(rad * 2, rad * 2);
+			const context = a.getContext("2d");
+
+			context.beginPath();
+			context.arc(rad, rad, rad, 0, Math.PI * 2, true);
+			context.closePath();
+			context.clip();
+
+			const avatar = await Canvas.loadImage(user);
+			context.drawImage(avatar, 0, 0, rad * 2, rad * 2);
+
+			ctx.drawImage(a, pos, yPos);
+
+			ctx.closePath();
+			pos -= rad;
+		}
+
+		// Date
+		let date = dayjs(this.date).format("DD.MM.YYYY HH:mm");
+		metrics = ctx.measureText(date);
+		h = this.textHeight(date, ctx, metrics);
+		ctx.fillText(date, width - 15 - metrics.width, rad + h);
 		ctx.restore();
 	}
 }
