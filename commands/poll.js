@@ -2,11 +2,22 @@ const { MessageAttachment, MessageActionRow, MessageButton, MessageEmbed } = req
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const Poll = require("../Poll.js");
 
-async function help(interaction) {
+async function help(interaction, client) {
   const helpEmbed = new MessageEmbed()
     .setColor("#349D43")
     .setTitle("Discord Poll Bot")
-    .setDescription("Help not working yet...");
+    .setThumbnail(client.user.avatarURL())
+    .setAuthor({ name: client.user.username, iconURL: client.user.avatarURL(), url: 'https://shadowlp174.4lima.de' })
+    .setDescription("This bot was made to create more reliable Discord Polls based on u/Feeeeddmmmeee's concept art.")
+    .addFields(
+      { name: '\u200B', value: '\u200B' },
+      { name: 'Help', value: '\u200B' },
+      { name: '/poll prepare <option1> <option2>', value: 'Use this command to prepare the 2 options of the poll. Use this command before you start a poll!', inline: true },
+      { name: '/poll start <name> <description> <duration>', value: 'This command will start the poll. The name is the word/text that\'s drawn in the top left corner. The description can be used for the question and the duration sets the time length of the poll in seconds. Max value is 300(5 min)', inline: true }
+    )
+    .setTimestamp()
+    .setFooter(`Requested by ${interaction.user.tag}`, interaction.user.avatarURL());
+
 
   interaction.reply({ embeds: [helpEmbed], ephemeral: true })
 }
@@ -20,10 +31,10 @@ var prepared = ["First Option", "Second Option"];
 async function addPoll(interaction, client) {
   const options = interaction.options;
   if (options.data.length == 0) {
-    await help(interaction);
+    await help(interaction, client);
   } else {
     switch (options.getSubcommand()) {
-      case 'help': help(interaction); break;
+      case 'help': help(interaction, client); break;
       case 'prepare':
         if (options.get("option1").value && options.get("option2").value) {
           prepared = [options.get("option1").value, options.get("option2").value];
@@ -153,6 +164,9 @@ data.addSubcommand(subcommand =>
       option.setName("duration")
       .setDescription("The duration if the Poll in seconds")
       .setRequired(true)));
+data.addSubcommand(subcommand =>
+  subcommand.setName('help')
+    .setDescription('Displays the help embed and info about the bot.'));
 /*data.addStringOption(option =>
   option.setName('name')
     .setDescription('The Name of the Poll')

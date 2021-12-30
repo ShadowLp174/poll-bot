@@ -89,7 +89,7 @@ async function drawFooter(ctx, x, y, width, height, padding, users, voteCount, d
 
 	var rad = 15;
 
-	ctx.fillStyle = "#2C2F33";
+	ctx.fillStyle = "#4E535A"; //"#2C2F33";
 	ctx.lineWidth = 2;
 	ctx.strokeStyle = "#2C2F33";
 	ctx.beginPath();
@@ -129,19 +129,22 @@ async function drawFooter(ctx, x, y, width, height, padding, users, voteCount, d
 	}
 
 	// Date
-	console.log(dayjs(date).format("DD.MM.YYYY HH:mm"));
+	date = dayjs(new Date()).format("DD.MM.YYYY HH:mm");
+	metrics = ctx.measureText(date);
+	h = textHeight(date, ctx, metrics);
+	ctx.fillText(date, width - 15 - metrics.width, rad + h);
 	ctx.restore();
 }
 
 async function testpoll(interaction) {
-	var width = 500, height = 250, padding = 10;
+	var width = 500, height = 200, padding = 10;
 	const canvas = Canvas.createCanvas(width, height);
 	const ctx = canvas.getContext('2d');
 
-	var name = "testpoll";
+	var name = "poll";
 	var nameHeight = textHeight(name, ctx);
 
-	var description = "This is a testpoll";
+	var description = "This is an example poll.";
 	var descHeight = textHeight(description, ctx);
 
 	ctx.fillStyle = "#23272A";
@@ -160,40 +163,29 @@ async function testpoll(interaction) {
 
 	var barHeight = 40;
 
-	var votes = [2, 4]; // [optionA, optionB]
-	var names = ["Working!", "Not Working!"];
+	var votes = [3, 2]; // [optionA, optionB]
+	var names = ["Poll Answer A", "Poll Answer B"];
 
 	drawVoteBars(ctx, dataWidth - 20, barHeight, votes, {pad: padding, hHeight: headerHeight}, names);
 
 	await drawFooter(ctx, padding, padding + headerHeight + barHeight * 2 + 20, width, height, padding, [interaction.user.displayAvatarURL({ format: 'jpg' }), interaction.user.displayAvatarURL({ format: 'jpg' }), interaction.user.displayAvatarURL({ format: 'jpg' })], votes.reduce((prev, curr) => prev+curr), new Date());
 
-	const attachment = new MessageAttachment(canvas.toBuffer(), 'testpoll.png');
+	const attachment = new MessageAttachment(canvas.toBuffer(), 'examplepoll.png');
 	const row = new MessageActionRow()
 			.addComponents(
 				new MessageButton()
 					.setCustomId('vOption1<PollIDHere>')
-					.setLabel('Option A')
+					.setLabel('Poll Answer A')
 					.setStyle('PRIMARY'),
 				new MessageButton()
 					.setCustomId('vOption2<PollIDHere>')
-					.setLabel('Option B')
+					.setLabel('Poll Answer B')
 					.setStyle('PRIMARY')
 			);
-	interaction.reply({ content: 'Here\'s the poll: ', files: [attachment], components: [row] });
+	interaction.reply({ content: 'Here\'s an example: ', files: [attachment], components: [row] });
 
 	const filter = i => i.customId === 'vOption1<PollIDHere>' || i.customId === 'vOption2<PollIDHere>';
 	const collector = interaction.channel.createMessageComponentCollector({ filter, time: 15000 });
-
-	/*///////////////////////////////
-
-	NOTE:
-
-	interaction.reply({ ephemeral: true });
-
-	should make the message only visible to the user who interacted
-
-	*/////////////////////////////////
-
 	collector.on('collect', async i => {
 		if (i.customId === 'vOption1<PollIDHere>') {
 			await i.reply({ content: 'You voted for the first option!', ephemeral: true });
@@ -202,7 +194,9 @@ async function testpoll(interaction) {
 		}
 	});
 
-	collector.on('end', collected => console.log(`Collected ${collected.size} items`));
+	collector.on('end', (collected) => {
+		
+	});
 }
 
 module.exports = {

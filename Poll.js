@@ -8,7 +8,8 @@ dayjs().format();
 */
 
 class Poll {
-	constructor(name, options) {
+	constructor(name, options, layout) {
+		this.layout = layout;
 		this.voteOptions = options;
 		this.votes = [0, 0];
 		this.avatars = [];
