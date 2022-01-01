@@ -9,7 +9,7 @@ Based on [u/Feeeeddmmmeee's](https://www.reddit.com/user/Feeeeddmmmeee) suggesti
 
 1. Clone the repository using git from the following url: ```https://github.com/ShadowLp174/poll-bot.git```
 2. Create a new Discord application as described [here]("https://discordjs.guide/preparations/setting-up-a-bot-application.html#creating-your-bot")
-3. Add the bot to your server. **IMPORTANT**: When creating the invite link, make sure to give the bot permission to register application commands! See [image]("docs/adding-to-server.png")
+3. Add the bot to your server. **IMPORTANT**: When creating the invite link, make sure to give the bot permission to register application commands! See [image](docs/adding-to-server.png)
 4. Replace `clientId` and `token` in the config.json file with your own tokens.
 5. Get the server id of the server you want to use your bot in. And add it to the config.json like described [here](#setting-guildID)
 6. Run `node command-deployer.js`
