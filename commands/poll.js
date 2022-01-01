@@ -10,7 +10,7 @@ async function help(interaction, client) {
     .setAuthor({ name: client.user.username, iconURL: client.user.avatarURL(), url: 'https://shadowlp174.4lima.de' })
     .setDescription("This bot was made to create more reliable Discord Polls based on u/Feeeeddmmmeee's concept art.")
     .addFields(
-      { name: '\u200B', value: '\u200B' },
+      //{ name: '\u200B', value: '\u200B' },
       { name: 'Help', value: '\u200B' },
       { name: '/poll prepare <option1> <option2>', value: 'Use this command to prepare the 2 options of the poll. Use this command before you start a poll!', inline: true },
       { name: '/poll start <name> <description> <duration>', value: 'This command will start the poll. The name is the word/text that\'s drawn in the top left corner. The description can be used for the question and the duration sets the time length of the poll in seconds. Max value is 300(5 min)', inline: true }
@@ -18,15 +18,32 @@ async function help(interaction, client) {
     .setTimestamp()
     .setFooter(`Requested by ${interaction.user.tag}`, interaction.user.avatarURL());
 
-
   interaction.reply({ embeds: [helpEmbed], ephemeral: true })
 }
 
 var users = [];
 var timer, remainingDuration = 0, interval;
 var pollMessage;
+var pollInteractions = [];
+var poll;
 
 var prepared = ["First Option", "Second Option"];
+
+function listenForStats(channel) {
+  const filter = i => i.customId === 'personalResult<PollIdHere>';
+  const collector = channel.createMessageComponentCollector({ filter, time: 300000 });
+  collector.on("collect", async i => {
+    //await i.deferReply();
+    //await i.editReply({ content: "This funtion is currently under heavy development and doesn't work yet!", ephemeral: true });
+    await poll.personalStats(i.user.id);
+    const attachment = new MessageAttachment(poll.canvas.toBuffer(), 'poll.png');
+    i.reply({ content: "Your votes: ", ephemeral: true, files: [attachment] });
+  });
+
+  collector.on("end", async collected => {
+    console.log(`Collect ${collected.size} items`);
+  });
+}
 
 async function addPoll(interaction, client) {
   const options = interaction.options;
@@ -56,7 +73,7 @@ async function addPoll(interaction, client) {
           var names = prepared;
 
           var name = options.get("name").value, description = options.get("description").value;
-          var poll = new Poll({name: name, description: description}, {name: names})
+          poll = new Poll({name: name, description: description}, {name: names})
           await poll.update();
 
           const attachment = new MessageAttachment(poll.canvas.toBuffer(), 'poll.png');
@@ -64,12 +81,10 @@ async function addPoll(interaction, client) {
               .addComponents(
                 new MessageButton()
                   .setCustomId('vOption1<PollIDHere>')
-                  //.setLabel('Option A')
                   .setLabel(names[0])
                   .setStyle('PRIMARY'),
                 new MessageButton()
                   .setCustomId('vOption2<PollIDHere>')
-                  //.setLabel('Option B')
                   .setLabel(names[1])
                   .setStyle('PRIMARY')
               );
@@ -102,16 +117,17 @@ async function addPoll(interaction, client) {
             } else {
               await i.deferUpdate();
               await i.message.removeAttachments();
+              //pollInteractions.push(i);
               if (i.customId === 'vOption1<PollIDHere>') {
                 users.push(i.user.id);
-                await poll.addVote(0, i.user.displayAvatarURL({ format: 'png' }));
+                await poll.addVote(0, i.user.id, i.user.displayAvatarURL({ format: 'png' }));
                 let attachment = new MessageAttachment(poll.canvas.toBuffer(), 'poll.png');
 
                 await i.editReply({ content: 'Here\'s the poll: ', files: [attachment] });
                 await i.followUp({ content: 'You voted for Option A.', ephemeral: true });
               } else if (i.customId === 'vOption2<PollIDHere>') {
                 users.push(i.user.id);
-                await poll.addVote(1, i.user.displayAvatarURL({ format: 'png' }));
+                await poll.addVote(1, i.user.id, i.user.displayAvatarURL({ format: 'png' }));
                 let attachment = new MessageAttachment(poll.canvas.toBuffer(), 'poll.png');
 
                 await i.editReply({ content: 'Here\'s the poll: ', files: [attachment] });
@@ -121,11 +137,20 @@ async function addPoll(interaction, client) {
           });
 
           collector.on('end', async collected => {
+            let channel = await client.channels.fetch(collected.entries().next().value[1].channelId)
+            clearInterval(interval);
             timer.edit("Ended");
-            //pollMessage.delete();
 
             let attachment = new MessageAttachment(poll.canvas.toBuffer(), 'poll.png');
-            await timer.channel.send({ content: "That's the final result: ", files: [attachment] });
+            const row = new MessageActionRow()
+                .addComponents(
+                  new MessageButton()
+                    .setCustomId('personalResult<PollIdHere>')
+                    .setLabel('What did I vote for?')
+                    .setStyle('PRIMARY'));
+            await timer.channel.send({ content: "That's the final result: ", files: [attachment], components: [row] });
+            listenForStats(channel);
+            pollMessage.edit({ content: 'Here\'s the poll: ', files: [attachment], components: [] });
             timer.channel.send("Total Answers: " + poll.votes.reduce((prev, curr) => prev + curr));
             users = [], pollMessage = undefined;
           });
