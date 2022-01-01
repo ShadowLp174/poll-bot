@@ -109,7 +109,7 @@ async function drawFooter(ctx, x, y, width, height, padding, users, voteCount, d
 	users.reverse();
 	for (let i = 0; i < users.length; i++) {
 		ctx.beginPath();
-		let user = users[i]; // user == interaction.user.displayAvatarURL({ format: 'jpg' })
+		let user = users[i]; // user == interaction.user.displayAvatarURL({ format: 'png' })
 
 		const a = Canvas.createCanvas(rad * 2, rad * 2);
 		const context = a.getContext("2d");
@@ -168,7 +168,7 @@ async function testpoll(interaction) {
 
 	drawVoteBars(ctx, dataWidth - 20, barHeight, votes, {pad: padding, hHeight: headerHeight}, names);
 
-	await drawFooter(ctx, padding, padding + headerHeight + barHeight * 2 + 20, width, height, padding, [interaction.user.displayAvatarURL({ format: 'jpg' }), interaction.user.displayAvatarURL({ format: 'jpg' }), interaction.user.displayAvatarURL({ format: 'jpg' })], votes.reduce((prev, curr) => prev+curr), new Date());
+	await drawFooter(ctx, padding, padding + headerHeight + barHeight * 2 + 20, width, height, padding, [interaction.user.displayAvatarURL({ format: 'png' }), interaction.user.displayAvatarURL({ format: 'png' }), interaction.user.displayAvatarURL({ format: 'png' })], votes.reduce((prev, curr) => prev+curr), new Date());
 
 	const attachment = new MessageAttachment(canvas.toBuffer(), 'examplepoll.png');
 	const row = new MessageActionRow()
@@ -195,7 +195,7 @@ async function testpoll(interaction) {
 	});
 
 	collector.on('end', (collected) => {
-		
+
 	});
 }
 
