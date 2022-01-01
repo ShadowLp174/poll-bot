@@ -123,54 +123,26 @@ class Poll {
 		ctx.translate(padding, padding + headerHeight);
 
 		var barPadding = 5;
-		if (vote == undefined) {
-			percentages.forEach((percentage, i) => { // I don't know I meant to do with this calculations but it somehow works so don't touch it
-				if (!percentage) percentage = 0;
-				ctx.fillStyle = "#2C2F33";
-				let y = (height + 10 ) * i;
-				roundRect(ctx, 20, y, width, height, 5, true, false); // full bar
+		percentages.forEach((percentage, i) => { // I don't know I meant to do with this calculations but it somehow works so don't touch it
+			if (!percentage) percentage = 0;
+			let paddingLeft = (vote != undefined) ? 30 : 0;
 
-				ctx.fillStyle = "#5865F2"; // percentage display
-				roundRect(ctx, 20, y, width * (votes[i] / (sum / 100) / 100), height, 5, true, false);
+			ctx.fillStyle = "#2C2F33";
+			let y = (height + 10 ) * i;
+			roundRect(ctx, 20, y, width, height, 5, true, false); // full bar
 
-				ctx.fillStyle = "#2C2F33";
-				let h = textHeight(i + 1, ctx);
-				ctx.fillText(i + 1, 0, y + height / 2 + h / 2);
+			ctx.fillStyle = "#5865F2"; // percentage display
+			roundRect(ctx, 20, y, width * (votes[i] / (sum / 100) / 100), height, 5, true, false);
 
-				ctx.fillStyle = "#FFFFFF"; // Option names
-				h = textHeight(names[i], ctx);
-				ctx.fillText(names[i], 30, y + 10 + h);
+			ctx.fillStyle = "#2C2F33";
+			let h = textHeight(i + 1, ctx);
+			ctx.fillText(i + 1, 0, y + height / 2 + h / 2);
 
-				ctx.fillStyle = "#2C2F33"; // percentage and vote count background
-				let metrics = ctx.measureText(percentage + "% (" + votes[i] + ")");
-				let w = metrics.width;
-				h = textHeight(percentage + "% (" + votes[i] + ")", ctx, metrics);
-				y = y + (height - h - barPadding * 2) + barPadding * 2;
-				roundRect(ctx, width - barPadding - w - 2, y - h - 2, w + 4, h + 7, 5, true, false);
+			ctx.fillStyle = "#FFFFFF"; // Option names
+			h = textHeight(names[i], ctx);
+			ctx.fillText(names[i], 30 + paddingLeft, y + 10 + h);
 
-				ctx.fillStyle = "#5865F2"; // percentage and vote count
-				ctx.fillText(percentage + "% (" + votes[i] + ")", width - barPadding - w, y);
-			});
-		} else {
-			percentages.forEach((percentage, i) => {
-				if (!percentage) percentage = 0;
-				let paddingLeft = 30;
-				let y = (height + 10) * i;
-
-				ctx.fillStyle = "#2C2F33";
-				roundRect(ctx, 20, y, width, height, 5, true, false); // full bar
-
-				ctx.fillStyle = (i != vote) ? "#616870" : "#5865F2"; // percentage display
-				roundRect(ctx, 20, y, width * (votes[i] / (sum / 100) / 100), height, 5, true, false);
-
-				ctx.fillStyle = "#2C2F33";
-				let h = textHeight(i + 1, ctx);
-				ctx.fillText(i + 1, 0, y + height / 2 + h / 2);
-
-				ctx.fillStyle = "#FFFFFF"; // Option names
-				h = textHeight(names[i], ctx);
-				ctx.fillText(names[i], 30 + paddingLeft, y + 10 + h);
-
+			if (vote != undefined) {
 				ctx.strokeStyle = "#FFFFFF"; // selection circle
 				ctx.fillStyle = "#717cf4";
 				ctx.beginPath();
@@ -183,20 +155,18 @@ class Poll {
 					ctx.closePath();
 					ctx.fill();
 				}
+			}
 
-				ctx.fillStyle = "#2C2F33"; // percentage and vote count background
-				let metrics = ctx.measureText(percentage + "% (" + votes[i] + ")");
-				let w = metrics.width;
-				h = textHeight(percentage + "% (" + votes[i] + ")", ctx, metrics);
-				y = y + (height - h - barPadding * 2) + barPadding * 2;
-				if (vote == i) roundRect(ctx, width - barPadding - w - 2, y - h - 2, w + 4, h + 7, 5, true, false);
+			ctx.fillStyle = "#2C2F33"; // percentage and vote count background
+			let metrics = ctx.measureText(percentage + "% (" + votes[i] + ")");
+			let w = metrics.width;
+			h = textHeight(percentage + "% (" + votes[i] + ")", ctx, metrics);
+			y = y + (height - h - barPadding * 2) + barPadding * 2;
+			if (vote == i || vote == undefined) roundRect(ctx, width - barPadding - w - 2, y - h - 2, w + 4, h + 7, 5, true, false);
 
-				ctx.fillStyle = "#5865F2"; // percentage and vote count
-				ctx.fillText(percentage + "% (" + votes[i] + ")", width - barPadding - w, y);
-			});
-
-		}
-
+			ctx.fillStyle = "#5865F2"; // percentage and vote count
+			ctx.fillText(percentage + "% (" + votes[i] + ")", width - barPadding - w, y);
+		});
 		ctx.restore();
 	}
 
