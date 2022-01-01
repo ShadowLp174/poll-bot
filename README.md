@@ -25,4 +25,5 @@ Based on [u/Feeeeddmmmeee's](https://www.reddit.com/user/Feeeeddmmmeee) suggesti
 
 #### Images
 
+The needed authorization scopes for the invite link: 
 ![description of the needed scopes is available at: https://discordjs.guide/preparations/adding-your-bot-to-servers.html#bot-invite-links](docs/adding-to-server.png)
