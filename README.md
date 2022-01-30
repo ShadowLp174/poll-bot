@@ -3,6 +3,8 @@
 This Bot was designed to create easy understandable polls with nice UI for Discord servers.
 Based on [u/Feeeeddmmmeee's](https://www.reddit.com/user/Feeeeddmmmeee) suggestion for Discord polls.
 
+*Note: This bot is not perfect and is full of bugs... So please report issues on GitHub. If you need a presentation of the bot write me on Discord (ShadowLp174#2717)*
+
 ## Installation
 
 <!--- **Important: This is not up-to-date and should be changed in the future** -->
@@ -25,5 +27,5 @@ Based on [u/Feeeeddmmmeee's](https://www.reddit.com/user/Feeeeddmmmeee) suggesti
 
 #### Images
 
-The needed authorization scopes for the invite link: 
+The needed authorization scopes for the invite link:
 ![description of the needed scopes is available at: https://discordjs.guide/preparations/adding-your-bot-to-servers.html#bot-invite-links](docs/adding-to-server.png)

@@ -8,8 +8,7 @@ dayjs().format();
 */
 
 class Poll {
-	constructor(name, options, layout) {
-		this.layout = layout;
+	constructor(name, options) {
 		this.voteOptions = options;
 		this.votes = [0, 0];
 		this.avatars = [];
@@ -131,7 +130,7 @@ class Poll {
 			let y = (height + 10 ) * i;
 			roundRect(ctx, 20, y, width, height, 5, true, false); // full bar
 
-			ctx.fillStyle = "#5865F2"; // percentage display
+			if (vote == i || vote == undefined) {ctx.fillStyle = "#5865F2";} else {ctx.fillStyle = "#4E535A";} // percentage display
 			roundRect(ctx, 20, y, width * (votes[i] / (sum / 100) / 100), height, 5, true, false);
 
 			ctx.fillStyle = "#2C2F33";
