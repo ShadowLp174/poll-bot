@@ -1,7 +1,7 @@
 # Discord Poll Bot
 
 This Bot was designed to create easy understandable polls with nice UI for Discord servers.
-Based on [u/Feeeeddmmmeee's](https://www.reddit.com/user/Feeeeddmmmeee) suggestion for Discord polls.
+Based on [u/Feeeeddmmmeee's](https://www.reddit.com/user/Feeeeddmmmeee) ([GitHub](https://github.com/Feeeeddmmmeee)) suggestion for Discord polls.
 
 *Note: This bot is not perfect and is full of bugs... So please report issues on GitHub. If you need a presentation of the bot write me on Discord (ShadowLp174#2717)*
 
