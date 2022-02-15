@@ -91,66 +91,66 @@ async function addPoll(interaction, client) {
           const channel = client.channels.cache.get(interaction.channel.id);
           channel.send('Remaining time: ' + duration / 1000).then((msg) => {
             timer = msg;
-          });
 
-          remainingDuration = duration;
+            remainingDuration = duration;
 
-          interval = setInterval(() => {
-            if (remainingDuration >= 0) {
-              timer.edit("Remaining time: " + remainingDuration / 1000 + "s");
-              remainingDuration -= 1000;
-            } else {
-              timer.edit("Ended");
-              clearInterval(interval);
-            }
-          }, 1000);
-
-          const filter = i => i.customId === 'vOption1<PollIDHere>' || i.customId === 'vOption2<PollIDHere>';
-          const collector = interaction.channel.createMessageComponentCollector({ filter, time: duration });
-
-          collector.on('collect', async i => {
-            pollMessage = i.message;
-            if (users.includes(i.user.id)) {
-              await i.reply({ content: 'You\'ve voted already!', ephemeral: true} );
-            } else {
-              await i.deferUpdate();
-              await i.message.removeAttachments();
-              //pollInteractions.push(i);
-              if (i.customId === 'vOption1<PollIDHere>') {
-                users.push(i.user.id);
-                await poll.addVote(0, i.user.id, i.user.displayAvatarURL({ format: 'png' }));
-                let attachment = new MessageAttachment(poll.canvas.toBuffer(), 'poll.png');
-
-                await i.editReply({ content: 'Here\'s the poll: ', files: [attachment] });
-                await i.followUp({ content: 'You voted for Option A.', ephemeral: true });
-              } else if (i.customId === 'vOption2<PollIDHere>') {
-                users.push(i.user.id);
-                await poll.addVote(1, i.user.id, i.user.displayAvatarURL({ format: 'png' }));
-                let attachment = new MessageAttachment(poll.canvas.toBuffer(), 'poll.png');
-
-                await i.editReply({ content: 'Here\'s the poll: ', files: [attachment] });
-                await i.followUp({ content: 'You voted for Option B.', ephemeral: true });
+            interval = setInterval(() => {
+              if (remainingDuration >= 0) {
+                timer.edit("Remaining time: " + remainingDuration / 1000 + "s");
+                remainingDuration -= 1000;
+              } else {
+                timer.edit("Ended");
+                clearInterval(interval);
               }
-            }
-          });
+            }, 1000);
 
-          collector.on('end', async collected => {
-            let channel = await client.channels.fetch(collected.entries().next().value[1].channelId)
-            clearInterval(interval);
-            timer.edit("Ended");
+            const filter = i => i.customId === 'vOption1<PollIDHere>' || i.customId === 'vOption2<PollIDHere>';
+            const collector = interaction.channel.createMessageComponentCollector({ filter, time: duration });
 
-            let attachment = new MessageAttachment(poll.canvas.toBuffer(), 'poll.png');
-            const row = new MessageActionRow()
-                .addComponents(
-                  new MessageButton()
-                    .setCustomId('personalResult<PollIdHere>')
-                    .setLabel('What did I vote for?')
-                    .setStyle('PRIMARY'));
-            await timer.channel.send({ content: "That's the final result: ", files: [attachment], components: [row] });
-            listenForStats(channel);
-            pollMessage.edit({ content: 'Here\'s the poll: ', files: [attachment], components: [] });
-            timer.channel.send("Total Answers: " + poll.votes.reduce((prev, curr) => prev + curr));
-            users = [], pollMessage = undefined;
+            collector.on('collect', async i => {
+              pollMessage = i.message;
+              if (users.includes(i.user.id)) {
+                await i.reply({ content: 'You\'ve voted already!', ephemeral: true} );
+              } else {
+                await i.deferUpdate();
+                await i.message.removeAttachments();
+                //pollInteractions.push(i);
+                if (i.customId === 'vOption1<PollIDHere>') {
+                  users.push(i.user.id);
+                  await poll.addVote(0, i.user.id, i.user.displayAvatarURL({ format: 'png' }));
+                  let attachment = new MessageAttachment(poll.canvas.toBuffer(), 'poll.png');
+
+                  await i.editReply({ content: 'Here\'s the poll: ', files: [attachment] });
+                  await i.followUp({ content: 'You voted for Option A.', ephemeral: true });
+                } else if (i.customId === 'vOption2<PollIDHere>') {
+                  users.push(i.user.id);
+                  await poll.addVote(1, i.user.id, i.user.displayAvatarURL({ format: 'png' }));
+                  let attachment = new MessageAttachment(poll.canvas.toBuffer(), 'poll.png');
+
+                  await i.editReply({ content: 'Here\'s the poll: ', files: [attachment] });
+                  await i.followUp({ content: 'You voted for Option B.', ephemeral: true });
+                }
+              }
+            });
+
+            collector.on('end', async collected => {
+              let channel = await client.channels.fetch(collected.entries().next().value[1].channelId)
+              clearInterval(interval);
+              timer.edit("Ended");
+
+              let attachment = new MessageAttachment(poll.canvas.toBuffer(), 'poll.png');
+              const row = new MessageActionRow()
+                  .addComponents(
+                    new MessageButton()
+                      .setCustomId('personalResult<PollIdHere>')
+                      .setLabel('What did I vote for?')
+                      .setStyle('PRIMARY'));
+              await timer.channel.send({ content: "That's the final result: ", files: [attachment], components: [row] });
+              listenForStats(channel);
+              pollMessage.edit({ content: 'Here\'s the poll: ', files: [attachment], components: [] });
+              timer.channel.send("Total Answers: " + poll.votes.reduce((prev, curr) => prev + curr));
+              users = [], pollMessage = undefined;
+            });
           });
         }
         break;
