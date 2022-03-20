@@ -22,23 +22,49 @@ async function help(interaction, client) {
 }
 
 var users = [];
-var timer, remainingDuration = 0, interval;
-var pollMessage;
+var timer = {}, remainingDuration = {}, intervals = {};
+var pollMessage = {};
 var pollInteractions = [];
-var poll;
+var endedChannels = [];
+const polls = new Map();
+
+const endedPolls = [];
 
 var prepared = ["First Option", "Second Option"];
 
-function listenForStats(channel) {
-  const filter = i => i.customId === 'personalResult<PollIdHere>';
-  const collector = channel.createMessageComponentCollector({ filter, time: 300000 });
+async function listenForStats(message, id) {
+  const filter = i => i.customId.startsWith("personalResult");
+  const collector = message.createMessageComponentCollector({ filter, time: 15000 });//time: 300000 });
   collector.on("collect", async i => {
-    await poll.personalStats(i.user.id);
-    const attachment = new MessageAttachment(poll.canvas.toBuffer(), 'poll.png');
-    i.reply({ content: "Your votes: ", ephemeral: true, files: [attachment] });
+    if (!i.isButton()) return;
+    const uuid = i.customId.substring(i.customId.indexOf("<") + 1, i.customId.length - 1);
+    if (endedPolls.includes(uuid)) {
+      const poll = polls.get(uuid);
+      await poll.personalStats(i.user.id);
+      const attachment = new MessageAttachment(poll.canvas.toBuffer(), 'poll.png');
+      i.reply({ content: "Your votes: ", ephemeral: true, files: [attachment] });
+    } else {
+      i.reply({ content: "Unknown poll.", ephemeral: true });
+    }
   });
 
   collector.on("end", async collected => {
+    if (!polls.has(id)) return;
+    const poll = polls.get(id);
+    await poll.update();
+    const attachment = new MessageAttachment(poll.canvas.toBuffer(), 'poll.png');
+    message.edit({ content: 'Here\'s the poll: ', files: [attachment], components: [] });
+    /*if (collected.size > 0) {
+      collected.forEach(async (item, key) => {
+        const uuid = item.customId.substring(item.customId.indexOf("<") + 1, item.customId.length - 1);
+        if (!polls.has(uuid)) return;
+        const poll = polls.get(uuid);
+        await poll.update();
+        const attachment = new MessageAttachment(poll.canvas.toBuffer(), 'poll.png');
+        item.message.edit({ content: 'Here\'s the poll: ', files: [attachment], components: [] });
+        polls.delete(uuid);
+      });
+    }*/
     console.log(`Collect ${collected.size} items`);
   });
 }
@@ -63,67 +89,62 @@ async function addPoll(interaction, client) {
         if (options.get("name") && options.get("description")) {
           var duration = 30 * 1000;
           if (options.get("duration").value) {
-            if (options.get("duration").value < 5 * 60 * 1000) {
+            if (options.get("duration").value < 60 * 60 * 1000) {
                 duration = options.get("duration").value * 1000;
             }
           }
 
+          const uuid = (new Date()).getTime().toString(16) + Math.random().toString(16).slice(2);
+
           var names = prepared;
 
           var name = options.get("name").value, description = options.get("description").value;
-          poll = new Poll({name: name, description: description}, {name: names})
+          //poll = new Poll({name: name, description: description}, {name: names})
+          polls.set(uuid, new Poll({name: name, description: description}, {name: names}));
+          const poll = polls.get(uuid);
           await poll.update();
 
           const attachment = new MessageAttachment(poll.canvas.toBuffer(), 'poll.png');
           const row = new MessageActionRow()
               .addComponents(
                 new MessageButton()
-                  .setCustomId('vOption1<PollIDHere>')
+                  .setCustomId('vOption1<' + uuid + '>')
                   .setLabel(names[0])
                   .setStyle('PRIMARY'),
                 new MessageButton()
-                  .setCustomId('vOption2<PollIDHere>')
+                  .setCustomId('vOption2<' + uuid + '>')
                   .setLabel(names[1])
                   .setStyle('PRIMARY')
               );
 
           await interaction.reply({ content: 'Here\'s the poll: ', files: [attachment], components: [row] });
           const channel = client.channels.cache.get(interaction.channel.id);
-          channel.send('Remaining time: ' + duration / 1000).then((msg) => {
-            timer = msg;
+          let time = parseInt(new Date().getTime() / 1000) + parseInt(duration / 1000);
+          channel.send('Poll ends: <t:' + time + ":D><t:" + time + ":T>").then((msg) => {
+            timer[uuid] = msg;
 
-            remainingDuration = duration;
-
-            interval = setInterval(() => {
-              if (remainingDuration >= 0) {
-                timer.edit("Remaining time: " + remainingDuration / 1000 + "s");
-                remainingDuration -= 1000;
-              } else {
-                timer.edit("Ended");
-                clearInterval(interval);
-              }
-            }, 1000);
-
-            const filter = i => i.customId === 'vOption1<PollIDHere>' || i.customId === 'vOption2<PollIDHere>';
+            const filter = i => i.customId === 'vOption1<' + uuid + '>' || i.customId === 'vOption2<' + uuid + '>';
             const collector = interaction.channel.createMessageComponentCollector({ filter, time: duration });
 
+            users[uuid] = [];
+
             collector.on('collect', async i => {
-              pollMessage = i.message;
-              if (users.includes(i.user.id)) {
+              pollMessage[uuid] = i.message;
+              if (users[uuid].includes(i.user.id)) {
                 await i.reply({ content: 'You\'ve voted already!', ephemeral: true} );
               } else {
                 await i.deferUpdate();
                 await i.message.removeAttachments();
                 //pollInteractions.push(i);
-                if (i.customId === 'vOption1<PollIDHere>') {
-                  users.push(i.user.id);
+                if (i.customId === 'vOption1<' + uuid + '>') {
+                  users[uuid].push(i.user.id);
                   await poll.addVote(0, i.user.id, i.user.displayAvatarURL({ format: 'png' }));
                   let attachment = new MessageAttachment(poll.canvas.toBuffer(), 'poll.png');
 
                   await i.editReply({ content: 'Here\'s the poll: ', files: [attachment] });
                   await i.followUp({ content: 'You voted for Option A.', ephemeral: true });
-                } else if (i.customId === 'vOption2<PollIDHere>') {
-                  users.push(i.user.id);
+                } else if (i.customId === 'vOption2<' + uuid + '>') {
+                  users[uuid].push(i.user.id);
                   await poll.addVote(1, i.user.id, i.user.displayAvatarURL({ format: 'png' }));
                   let attachment = new MessageAttachment(poll.canvas.toBuffer(), 'poll.png');
 
@@ -135,21 +156,24 @@ async function addPoll(interaction, client) {
 
             collector.on('end', async collected => {
               let channel = await client.channels.fetch(collected.entries().next().value[1].channelId)
-              clearInterval(interval);
-              timer.edit("Ended");
+              timer[uuid].edit("Ended");
+              console.log(uuid);
 
               let attachment = new MessageAttachment(poll.canvas.toBuffer(), 'poll.png');
-              const row = new MessageActionRow()
+              let row = new MessageActionRow()
                   .addComponents(
                     new MessageButton()
-                      .setCustomId('personalResult<PollIdHere>')
+                      .setCustomId('personalResult<' + uuid + '>')
                       .setLabel('What did I vote for?')
                       .setStyle('PRIMARY'));
-              await timer.channel.send({ content: "That's the final result: ", files: [attachment], components: [row] });
-              listenForStats(channel);
-              pollMessage.edit({ content: 'Here\'s the poll: ', files: [attachment], components: [] });
-              timer.channel.send("Total Answers: " + poll.votes.reduce((prev, curr) => prev + curr));
-              users = [], pollMessage = undefined;
+              await timer[uuid].channel.send({ content: "That's the final result: ", files: [attachment], components: [row] }).then(msg => {
+                listenForStats(msg);
+              });
+              //listenForStats(channel);
+              pollMessage[uuid].edit({ content: 'Here\'s the poll: ', files: [attachment], components: [] });
+              timer[uuid].channel.send("Total Answers: " + poll.votes.reduce((prev, curr) => prev + curr));
+              delete users[uuid]; delete pollMessage[uuid];
+              endedPolls.push(uuid);
             });
           });
         }

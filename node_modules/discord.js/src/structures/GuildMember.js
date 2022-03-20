@@ -1,5 +1,6 @@
 'use strict';
 
+const process = require('node:process');
 const Base = require('./Base');
 const VoiceState = require('./VoiceState');
 const TextBasedChannel = require('./interfaces/TextBasedChannel');
@@ -300,6 +301,14 @@ class GuildMember extends Base {
    */
   get moderatable() {
     return this.manageable && (this.guild.me?.permissions.has(Permissions.FLAGS.MODERATE_MEMBERS) ?? false);
+  }
+
+  /**
+   * Whether this member is currently timed out
+   * @returns {boolean}
+   */
+  isCommunicationDisabled() {
+    return this.communicationDisabledUntilTimestamp > Date.now();
   }
 
   /**

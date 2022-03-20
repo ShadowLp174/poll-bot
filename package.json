@@ -4,7 +4,8 @@
   "description": "A Discord poll bot using the Canvas API",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node index.js ./config.example.json",
+    "deploy-test": "node command-deployer.js ./config.example.json"
   },
   "author": "ShadowLp174",
   "license": "ISC",
@@ -14,6 +15,6 @@
     "canvas": "^2.8.0",
     "dayjs": "^1.10.7",
     "discord-api-types": "^0.26.0",
-    "discord.js": "^13.4.0"
+    "discord.js": "^13.6.0"
   }
 }
