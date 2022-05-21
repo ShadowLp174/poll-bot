@@ -79,12 +79,13 @@ async function addPoll(interaction, client) {
     switch (options.getSubcommand()) {
       case 'help': help(interaction, client); break;
       case 'prepare':
+        await interaction.editReply();
         if (options.get("option1").value && options.get("option2").value) {
           prepared = [options.get("option1").value, options.get("option2").value];
 
-          interaction.reply({ content: "Prepared the next poll. Ready to start", ephemeral: true });
+          interaction.editReply({ content: "Prepared the next poll. Ready to start", ephemeral: true });
         } else {
-          interaction.reply({ content: "Something went wrong :(", ephemeral: true });
+          interaction.editReply({ content: "Something went wrong :(", ephemeral: true });
         }
         break;
       case 'start':
@@ -95,6 +96,7 @@ async function addPoll(interaction, client) {
                 duration = options.get("duration").value * 1000;
             }
           }
+          await interaction.deferReply();
 
           const uuid = (new Date()).getTime().toString(16) + Math.random().toString(16).slice(2);
 
@@ -119,7 +121,9 @@ async function addPoll(interaction, client) {
                   .setStyle('PRIMARY')
               );
 
-          await interaction.reply({ content: 'Here\'s the poll: ', files: [attachment], components: [row] });
+          await interaction.editReply({ content: 'Here\'s the poll: ', files: [attachment], components: [row] }).then(msg => {
+            pollMessage[uuid] = msg;
+          });
           const channel = client.channels.cache.get(interaction.channel.id);
           let time = parseInt(new Date().getTime() / 1000) + parseInt(duration / 1000);
           channel.send('Poll ends: <t:' + time + ":D><t:" + time + ":T>").then((msg) => {
@@ -157,7 +161,8 @@ async function addPoll(interaction, client) {
             });
 
             collector.on('end', async collected => {
-              let channel = await client.channels.fetch(collected.entries().next().value[1].channelId)
+              console.log(collected.entries());
+              //let channel = await client.channels.fetch(collected.entries().next().value[1].channelId)
               timer[uuid].edit("Ended");
               console.log(uuid);
 
@@ -172,7 +177,7 @@ async function addPoll(interaction, client) {
                 listenForStats(msg);
               });*/
               listenForStats(channel);
-              pollMessage[uuid].edit({ content: 'Here\'s the poll: ', files: [attachment], components: [] });
+              if (pollMessage[uuid]) pollMessage[uuid].edit({ content: 'Here\'s the poll: ', files: [attachment], components: [] });
               timer[uuid].channel.send("Total Answers: " + poll.votes.reduce((prev, curr) => prev + curr));
               delete users[uuid]; delete pollMessage[uuid];
               endedPolls.push(uuid);
