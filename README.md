@@ -18,7 +18,7 @@ Based on [u/Feeeeddmmmeee's](https://www.reddit.com/user/Feeeeddmmmeee) ([GitHub
 7. After it finished run `node .` - The bot should be online now!
 8. You're done!
 
-If you need a permanent free hosting service and you know how to work with Linux, try [wyld.ml](https://wyld.ml). A hosting platform, where you get small virtual linux machines for your bot, running 24/7 for free.
+If you need a permanent free hosting service and you know how to work with Linux, try [wyld.ml](https://heyderdahl.com). A hosting platform, where you get small virtual linux machines for your bot, running 24/7 for free.
 
 ### Setting GuildID
 
